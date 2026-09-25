@@ -1,6 +1,6 @@
 # qwen-imagegen
 
-[![CI](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml/badge.svg)](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml) ![release](https://img.shields.io/badge/release-v0.1.0-orange) ![license](https://img.shields.io/badge/license-MIT-blue)
+[![CI](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml/badge.svg)](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml) ![v0.1.0](https://img.shields.io/badge/v0.1.0-orange) ![license](https://img.shields.io/badge/license-MIT-blue)
 
 English · [简体中文](README.md)
 
@@ -68,7 +68,7 @@ Those are still rare: macOS has ego lite ([lite.ego.app](https://lite.ego.app), 
 | Backend | Status | Notes |
 | --- | --- | --- |
 | **Tabbit** | ✅ Supported | This skill has only been tested on Windows so far |
-| Your own Chrome / Edge (CDP connection) | 🚧 Planned | Reuses your existing login state; nothing extra to install |
+| Your own Chrome / Edge (CDP connection) | 🚧 Planned | Reuses your existing login state — **but you must open a debugging port on your browser first**; see the end of this page |
 
 ---
 
@@ -144,6 +144,27 @@ Normally your agent handles it; use this only when debugging:
 # Re-attach to a timed-out download (once only):
 /usr/bin/bash.exe "<skill-dir>/scripts/qwen_image.sh" --fetch "<output-path>"
 ```
+
+## Before using your own browser (CDP): one setup step
+
+> This backend is still in development (🚧). Documenting the setup now so you can prepare in advance.
+
+CDP doesn't switch itself on — **you have to open a "debugging door" on Chrome / Edge** before Playwright can take it over:
+
+1. **Fully quit** Chrome / Edge (also from the tray — otherwise the startup flag is ignored)
+2. Relaunch it with the flag:
+   - Windows · Edge: `"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222`
+   - Windows · Chrome: `"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222`
+   - macOS: `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222`
+
+   Tired of typing it? **Copy a shortcut** and append `--remote-debugging-port=9222` to its target — just launch from that shortcut afterwards.
+3. **Verify the door is open**: open `http://127.0.0.1:9222/json/version` in the browser — if you see a chunk of JSON containing `"Browser"`, you're done
+4. Then sign in to [chat.qwen.ai](https://chat.qwen.ai) as usual — **the login state stays in your own browser**; the script just borrows it
+
+⚠️ Two warnings:
+
+- This port is local-only (127.0.0.1). Never expose it to your LAN or the public internet — that would hand over control of your browser.
+- Closing the browser window that was launched with the flag closes the door.
 
 ## Backend adaptation (for contributors)
 

@@ -1,6 +1,6 @@
 # qwen-imagegen
 
-[![CI](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml/badge.svg)](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml) ![release](https://img.shields.io/badge/release-v0.1.0-orange) ![license](https://img.shields.io/badge/license-MIT-blue)
+[![CI](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml/badge.svg)](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml) ![v0.1.0](https://img.shields.io/badge/v0.1.0-orange) ![license](https://img.shields.io/badge/license-MIT-blue)
 
 [English](README.en.md) · 简体中文
 
@@ -68,7 +68,7 @@
 | 后端 | 状态 | 说明 |
 | --- | --- | --- |
 | **Tabbit** | ✅ 当前支持 | 本技能目前只在 Windows 上实测过 |
-| 你自己的 Chrome / Edge（CDP 直连） | 🚧 规划中 | 复用你已有的登录态，不用再装任何东西 |
+| 你自己的 Chrome / Edge（CDP 直连） | 🚧 规划中 | 复用你已有的登录态，不用再装东西——**但要先给浏览器开个调试端口**，步骤见文末 |
 
 ---
 
@@ -144,6 +144,27 @@
 # 超时后只补跑下载（仅限一次）：
 /usr/bin/bash.exe "<技能目录>/scripts/qwen_image.sh" --fetch "<输出路径>"
 ```
+
+## 用自带浏览器（CDP）之前，先做一步配置
+
+> 这条路线还在开发（🚧），先把配置写清楚，方便你提前准备。
+
+CDP 不会自己生效——**你得先让 Chrome / Edge 把"调试门"打开**，Playwright 才能接管它：
+
+1. **完全退出** Chrome / Edge（托盘里也要退出，否则启动参数会被忽略）
+2. 带参数重新启动：
+   - Windows · Edge：`"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222`
+   - Windows · Chrome：`"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222`
+   - macOS：`/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222`
+
+   嫌每次敲麻烦？**复制一个快捷方式**，在"目标"末尾加上 `--remote-debugging-port=9222`，以后点这个快捷方式启动就行。
+3. **验证门开了没**：浏览器里打开 `http://127.0.0.1:9222/json/version`，能看到一串 JSON（里面有 `"Browser"` 字样）就成了
+4. 然后正常登录 [chat.qwen.ai](https://chat.qwen.ai)——**登录态就留在你自己的浏览器里**，脚本只是接过去用
+
+⚠️ 两个提醒：
+
+- 这个端口只开在**本机**（127.0.0.1），别把它暴露到局域网或公网——那等于把浏览器控制权交给别人
+- 用完把带参数的浏览器窗口关掉，门就关了
 
 ## 后端适配（给贡献者）
 
