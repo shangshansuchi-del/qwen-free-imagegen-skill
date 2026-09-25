@@ -12,15 +12,31 @@ No API key. No per-image billing. No third-party sign-up.
 
 ## 这是个什么东西 / What is this
 
-这是一个 **Agent Skill（智能体技能）**——装给 AI 用的技能包，**不是给人敲命令的软件**。
-
-你自己不动手。装好后，跟你的 Agent（Claude Code、Codex、WorkBuddy……都行）说人话就行：
+装好之后，跟你的 Agent（Claude Code、Codex、WorkBuddy……都行）说人话就行：
 
 > 「用千问帮我生成一张：雨夜霓虹街头的白色柴犬，3:4」
 
 剩下的——打开网页、选模型、填提示词、等出图、存原图——全是它替你干。你在网页上能用什么模型，它就能用什么模型；网页给你多大尺寸的图，它就存多大的图。
 
-This is an **Agent Skill** — a skill package for your AI, not a command-line tool for humans. You just talk; the agent clicks.
+You just talk. The agent does the clicking.
+
+---
+
+## 里面自带的生图提示词（这才是重点） / Built-in prompt recipes
+
+"帮你点网页"的技能到处都是。真正决定画质好坏的，是**交给网页的那句话怎么写**。
+
+这个技能自带一份实测过的提示词配方（`references/prompt-recipes.md`，针对 Qwen-Image 3.0）：
+
+- **两套公式** —— 视觉类：`主体 → 景别 → 视角 → 镜头 → 光线 → 风格 → 质感`；信息类（海报 / 信息图 / 分镜 / UI）按**创意简报七段**写，别用"美图思维"
+- **三档填空模板** —— 最小可用（≥120 字）/ 标准（250–400 字）/ 信息型
+- **8 类现成配方，直接能抄** —— 写实人像、二次元立绘、街头时尚、风景建筑、产品商业、信息型海报、分镜多格、UI 概念图
+- **六种反例及改法** —— 堆"8K / 杰作 / 大师作品"、写两个风格标签、"一个女生"就提交、描述复杂手部动作、用"不要 XX"表达排斥（网页端**没有反向提示词入口**，否定词会被忽略）……
+- **提交前 5 秒自检表**
+
+而且这条是写进技能规则的：**你只给一句话（比如"来张猫"）时，Agent 必须先按模板补全再提交**，不许原样丢给网页——"随手一句"和"能用的图"，差别就在这。
+
+Anyone can script the clicking. What decides image quality is **the prompt** — and that's what ships inside this skill. Say "draw a cat" and your agent expands it with the recipe first, never sends it raw.
 
 ---
 
@@ -183,7 +199,7 @@ qwen-imagegen/
 │   ├── generate.js               # 页面操作：选模式 / 选模型 / 填提示词 / 提交
 │   └── wait_download.js          # 等出图完成 + 抓全尺寸原图
 └── references/
-    ├── prompt-recipes.md         # 提示词写法（与浏览器后端无关的资产）
+    ├── prompt-recipes.md         # 生图提示词配方：两套公式 / 三档模板 / 8 类配方 / 六反例 / 自检表
     └── ui-selectors.md           # 页面结构、选择器、接口抓包
 ```
 
