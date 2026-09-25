@@ -1,167 +1,154 @@
 # qwen-imagegen
 
-**中文**：让 AI 替你去千问网页上画图，画完直接存成图片文件，放在你自己的电脑里。
+**中文**：一个给 AI Agent 用的生图技能。装好之后，你用平时说话的方式告诉你的 Agent，它就会替你打开 Qwen Studio（千问，chat.qwen.ai），把你要的画面填进去，等画完，把**全尺寸原图**存到你电脑的「图片」文件夹里。
 
-**English**: Let your AI assistant draw pictures on the Qwen website for you — and save the finished image straight to your own computer.
+**English**: An Agent Skill for image generation. Tell your AI agent what you want in plain language — it opens Qwen Studio (chat.qwen.ai) in a browser, fills in your prompt, waits for the image, and saves the **full-resolution original** to your Pictures folder.
 
-不需要 API Key，不按张收费，也不用注册任何第三方服务。
+不需要 API Key，不按张收费，不用注册任何第三方服务。
 
-No API key. No per-image billing. No signing up for anything.
-
----
-
-## 它到底干嘛的 / What it actually does
-
-你已经有一个登录着的千问网页了，对吧？
-
-这个项目做的事很简单：让 AI 替你去那个网页上**点鼠标**——输入你想要的画面描述、选好尺寸、等它画完、把图存下来。
-
-跟你自己手动干的**一模一样**，只是你不用守在旁边。
-
-That's it. It clicks the mouse for you. Everything it does, you could do by hand — you just don't have to sit there watching.
-
-**它不是 API**，不会去找什么接口。所以你在网页上能用什么模型，它就能用什么模型；网页给你多大尺寸的图，它就存多大的图。
-
-It's **not an API**. Whatever model you can use on the website, it uses. Whatever size image the site gives you, that's what you get.
+No API key. No per-image billing. No third-party sign-up.
 
 ---
 
-## ⚠️ 最重要的一件事：你得先自己登录 / You must be logged in first
+## 这是个什么东西 / What is this
+
+这是一个 **Agent Skill（智能体技能）**——装给 AI 用的技能包，**不是给人敲命令的软件**。
+
+你自己不动手。装好后，跟你的 Agent（Claude Code、Codex、WorkBuddy……都行）说人话就行：
+
+> 「用千问帮我生成一张：雨夜霓虹街头的白色柴犬，3:4」
+
+剩下的——打开网页、选模型、填提示词、等出图、存原图——全是它替你干。你在网页上能用什么模型，它就能用什么模型；网页给你多大尺寸的图，它就存多大的图。
+
+This is an **Agent Skill** — a skill package for your AI, not a command-line tool for humans. You just talk; the agent clicks.
+
+---
+
+## 为什么不用 API / Why not an API
+
+市面上"免费生图 API"一般来自聚合站，而聚合站有两个老毛病：**模型可能被悄悄换成廉价旧款**，**画质经常被降档**。
+
+这个技能直接驱动浏览器用网页版，绕开中间商：你账号下是什么模型就是什么模型，网页出多大图就存多大图（3:4 ≈ **1792×2400 全尺寸原图**，不是缩略图）。
+
+| | 本技能（浏览器代驾） | 免费生图 API 聚合站 |
+| --- | --- | --- |
+| 模型 | 网页上是什么就是什么（现为 Qwen-Image 3.0） | 常被静默换成廉价旧款 |
+| 画质 | 全尺寸原图 | 多为降档缩图 |
+| 费用 | 你自己账号的免费额度 | 隐性限额，或拿质量换免费 |
+| 凭据 | 登录态在你自己浏览器里 | 请求经第三方转发 |
+
+---
+
+## ⚠️ 用之前必须知道：登录态 / You must be logged in
 
 **它不会帮你登录，也永远不会碰你的账号和密码。**
 
-它用的，是你浏览器里**已经登录着的那个千问**。
+它用的，是浏览器里**已经登录着的那个千问**。所以第一次用之前，先在 Tabbit 浏览器里打开 [chat.qwen.ai](https://chat.qwen.ai) 登录好。登录这件事，它替不了你，也不该替你。
 
-所以第一次用之前，请你自己先在浏览器里打开 [chat.qwen.ai](https://chat.qwen.ai) 并登录好。登录这件事，**它替不了你，也不该替你**。
-
-It never touches your password. It simply uses the Qwen session **you are already logged into**. So before the first run, open chat.qwen.ai in your browser and sign in yourself.
-
-> 如果它报"未登录"，意思就是：你的浏览器里现在没有登录着的千问，去登录一下再跑。
->
-> If it says "login required", it just means: your browser isn't logged into Qwen right now. Go log in and run it again.
+It never touches your password. It uses the Qwen session **you are already logged into** — so sign in yourself, once, before the first run.
 
 ---
 
-## 开始之前要准备什么 / What you need
+## 它驱动哪个浏览器 / Which browser it drives
 
-1. 一个千问账号，并且**已经在浏览器里登录着**（见上一节）
-2. **Tabbit 浏览器** —— 目前只能用它来操作网页
-   （后面打算支持"连你自己已有的 Chrome / Edge"，那样就不用额外装东西了）
-3. Windows 用户请用 **Git Bash** 来运行命令
+这个技能最大的特点：它驱动的是**给 Agent 用的浏览器**。
 
-1. A Qwen account, **already logged in** in your browser
-2. **Tabbit browser** — the only browser it can drive for now
-   (support for connecting to your own Chrome / Edge is planned, which would mean nothing extra to install)
-3. On Windows, run it through **Git Bash**
+这类浏览器现在还很少：Mac 上有 ego lite（[lite.ego.app](https://lite.ego.app)，目前仅 macOS），**Windows 上主要是 Tabbit**——本技能用的就是它。
 
----
-
-## 怎么用 / How to use
-
-```bash
-/usr/bin/bash.exe "<技能目录>/scripts/qwen_image.sh" "一只白色柴犬站在雨夜的霓虹街头"
-```
-
-就这一句。画完之后，它会告诉你图片存在哪个位置。
-
-That's the whole thing. When it's done, it tells you where the picture was saved.
-
-想指定尺寸就加一个参数：
-
-```bash
-/usr/bin/bash.exe "<技能目录>/scripts/qwen_image.sh" "一只白色柴犬在雨夜街头" 16:9
-```
-
-> ⏱ **一个小提醒**：跑的时候，请给你的命令行工具**至少 10 分钟的超时时间**。
-> 画图本身要几十秒到几分钟。如果工具提前把它掐掉，你只会看到一片空白——那不是成功，是失败了。
->
-> Give your terminal **at least 10 minutes** timeout. If it gets killed early, you'll see nothing at all — that's a failure, not a slow run.
+| 后端 | 状态 | 说明 |
+| --- | --- | --- |
+| **Tabbit** | ✅ 当前支持 | 本技能目前只在 Windows 上实测过 |
+| 你自己的 Chrome / Edge（CDP 直连） | 🚧 规划中 | 复用你已有的登录态，不用再装任何东西 |
 
 ---
 
-## 图片存到哪去了 / Where do the images go
+## 怎么装、怎么用 / Install & use
 
-默认会存到脚本里写的一个文件夹。**但那个文件夹是作者自己电脑上的盘符，你的电脑上多半不存在**，所以要改成你自己的：
+都是**发给 Agent 的话**，复制粘贴就行。
 
-- **最简单的办法**：命令后面加一个你想存的位置
-  ```bash
-  /usr/bin/bash.exe "<技能目录>/scripts/qwen_image.sh" "一只柴犬" 3:4 "D:/我的图片/柴犬.png"
-  ```
-- **或者一劳永逸**：打开 `scripts/qwen_image.sh`，把第 10 行改成你自己的文件夹
+**第一步 · 装**，把这句话发给你的 Agent：
 
-The default folder is the author's own drive, which probably doesn't exist on your machine.
-Either pass your own path as the third argument, or edit line 10 of `scripts/qwen_image.sh`.
+> 请把 https://github.com/shangshansuchi-del/qwen-imagegen 这个项目下载到你的技能文件夹里（不确定技能文件夹在哪就先问我），下载完读一下里面的 SKILL.md。
+
+**第二步 · 用**，之后像点菜一样说话：
+
+> 用 Qwen Studio 帮我生成一张：雨夜霓虹街头的白色柴犬，电影感，3:4
+
+**第一次跑之前**：在 Tabbit 浏览器里登录好 chat.qwen.ai（见上面 ⚠️）。
+
+**两个小提醒**：
+
+- 生图要几十秒到几分钟，告诉你的 Agent：「**超时至少给 10 分钟**」——提前掐掉只会看到一片空白
+- 画完 Agent 会把图片的保存路径报给你
+
+**Step 1 · Install** — paste the first message to your agent. **Step 2 · Use** — just talk to it. Sign in to chat.qwen.ai in Tabbit first.
+
+---
+
+## 图片存在哪 / Where images are saved
+
+**默认存在你电脑的「图片」文件夹**下的 `qwen-imagegen` 子文件夹里：
+
+- Windows：`C:\你的用户名\Pictures\qwen-imagegen`
+- Mac / Linux：`~/Pictures/qwen-imagegen`
+
+**什么都不用配置，装好就能用。** 想换个地方存？跟 Agent 说一声就行（它支持指定路径，也有环境变量开关，见下面的技术细节）。
+
+By default images go to the `qwen-imagegen` folder inside your **Pictures** folder. Zero configuration.
 
 ---
 
 ## 出问题了怎么办 / When something goes wrong
 
-**如果什么都没显示（一片空白），那就是失败了，直接再跑一次。**
-这不是"还在画"，是失败了。
-
-**If it prints nothing at all, that's a failure — just run it again.** It is not "still working".
+**如果屏幕上什么都没显示，那就是失败了，直接再跑一次。** 这不是"还在画"。
 
 | 你看到的 | 是什么意思 |
 | --- | --- |
 | 什么都没显示 | 失败了，重跑 |
 | 提示"未登录" | 浏览器里没登录千问，去登录 |
-| 出现"服务访问量较大"之类的红色提示 | 千问那边临时拒绝了，脚本会自动再试一次；还是不行就等几分钟 |
-| 提示浏览器没开 / 没有窗口 | 浏览器没启动，或者窗口缩到托盘里了，手动打开一下 |
+| 红色"服务访问量较大"之类的提示 | 千问临时拒绝，脚本会自动再试一次；还不行就等几分钟 |
+| 提示浏览器没开 / 没有窗口 | 打开一下 Tabbit（窗口收进托盘时它会自动尝试唤起） |
 
 ---
 
----
+# 技术细节 / Technical details
 
-# 🔧 以下是技术细节 / Technical details below
+## 工作原理 / How it works
 
-> 这一区是给想改代码、想做适配、想排错的人看的。只想用它的话，看到这里就够了。
->
-> Everything below is for people who want to modify or debug it. If you just want to use it, you can stop here.
+`scripts/qwen_image.sh` 是唯一入口：预检浏览器 → 复用上次的标签组和对话（同一对话延续，不散落）→ 驱动页面选「图像生成」模式、锁定 Qwen-Image 3.0、填提示词提交 → 轮询 DOM 等完成 → 抓**去掉 OSS 缩图参数的全尺寸原图** → 存 PNG → 打印结果。
 
-## 它为什么不用 API / Why not an API
+成功时输出一行 JSON（`width`/`height` 从 PNG 头读出，是真实尺寸，不是页面 450px 缩略图）：
 
-| | 本技能（浏览器代驾） | 免费生图 API 聚合站 |
-| --- | --- | --- |
-| 模型 | 网页上是什么就是什么（现为 Qwen-Image 3.0） | 常被静默换成廉价 / 旧模型 |
-| 画质 | 全尺寸原图（3:4 ≈ 1792×2400） | 多为降档缩图 |
-| 费用 | 用你自己的账号额度 | 有隐性限额，或拿质量换免费 |
-| 风险 | 登录态在你自己浏览器里 | 第三方代持你的请求 |
+```json
+{"path":"C:/you/Pictures/qwen-imagegen/qwen-20260926-001530.png","bytes":5904848,"width":1792,"height":2400,"model":"Qwen-Image 3.0","ratio":"3:4"}
+```
 
-## 关于登录态 / About login state
+## 输出路径的三级优先级 / Output path precedence
 
-本技能**不持有任何凭证**：没有 cookie、没有 token、没有账号密码。
-它只是驱动一个**已经登录好的浏览器**。因此：
+```
+命令行第三参数  >  环境变量 QWEN_IMAGEGEN_OUT_DIR  >  默认 ~/Pictures/qwen-imagegen
+```
 
-- 登录必须由用户自己完成；脚本检测到未登录会直接退出（不消耗额度）
-- 仓库敏感信息扫描结果：**无**个人路径 / cookie / token / 邮箱
+## 手动运行（调试用） / Manual run (debugging)
 
-## 两种浏览器后端 / Browser backends
+平时让 Agent 干就行；排查问题时才用：
 
-| 后端 | 状态 | 说明 |
-| --- | --- | --- |
-| Tabbit | ✅ 可用 | 当前默认 |
-| CDP（连用户自己的 Chrome / Edge） | 🚧 规划中 | 连 `--remote-debugging-port`，**复用已有登录态**，用户无需重新登录，也无需额外安装浏览器 |
+```bash
+/usr/bin/bash.exe "<技能目录>/scripts/qwen_image.sh" "<提示词>" [画幅] [输出路径]
+# 超时后只补跑下载（仅限一次）：
+/usr/bin/bash.exe "<技能目录>/scripts/qwen_image.sh" --fetch "<输出路径>"
+```
 
-JS 层（`generate.js` + `wait_download.js`，148 行）是**纯 Playwright API**
-（`page.goto` / `getByRole` / `locator` / `evaluateAll`），只依赖外部注入的 `page`。
-换后端不需要动页面逻辑，只需适配 4 个动作：
+## 后端适配（给贡献者） / Backend adaptation
+
+JS 层（`generate.js` + `wait_download.js`，共 148 行）是**纯 Playwright API**（`page.goto` / `getByRole` / `locator` / `evaluateAll`），没有任何 `require("playwright")`——`page` 由外部注入（Tabbit 的 `nodejs` 子命令把文件内容包进 async 函数体执行）。**换后端不用动页面逻辑**，只需适配 4 个动作：
 
 | 动作 | Tabbit CLI | CDP / Playwright 等价 |
 | --- | --- | --- |
 | 列出标签页 | `tabs` | `context.pages()` |
-| 页面内执行脚本 | `nodejs` | `page.evaluate()` / 跑 node 脚本 |
+| 页面内执行脚本 | `nodejs` | 注入 `page` 跑 node 脚本 / `page.evaluate()` |
 | 关闭 / 废弃任务 | `finish [--discard]` | `page.close()` / `context.close()` |
 | 复用会话 | `resume --group` | 固定 `userDataDir` 的持久化 context |
-
-## 输出 / Output
-
-stdout 打印一行 JSON：
-
-```json
-{"path":"...","bytes":5904848,"width":1792,"height":2400,"model":"Qwen-Image 3.0","ratio":"3:4"}
-```
-
-`width` / `height` 是从 PNG 头读出的真实尺寸，不是页面缩略图的 450px。下载为去掉 OSS 缩图参数的**全尺寸原图**。
 
 ## 错误码 / Error codes
 
@@ -170,11 +157,11 @@ stdout 打印一行 JSON：
 | error | 处置 |
 | --- | --- |
 | `login-required` | 浏览器未登录千问 |
-| `provider-error` | 服务端拒绝；脚本自动重提交一次（间隔 20s，`QWEN_IMAGEGEN_NO_RETRY=1` 可关闭）；仍失败则等几分钟完整重跑，**不要用 `--fetch` 去等** |
-| `timeout`（无横幅） | 多半还在跑 → 唯一可用 `--fetch <输出路径>` 续等**一次**的场景；也空则完整重跑 |
-| `tabbit-not-running` / `tabbit-no-window` | 浏览器未启动 / 窗口在托盘且唤起失败（未开页面、不耗额度） |
+| `provider-error` | 服务端拒绝；自动重提交一次（间隔 20s，`QWEN_IMAGEGEN_NO_RETRY=1` 可关）；仍失败等几分钟完整重跑，**别用 `--fetch` 等** |
+| `timeout`（无横幅） | 生成多半还在跑 → 唯一可用 `--fetch` 续等一次的场景 |
+| `tabbit-not-running` / `tabbit-no-window` | 浏览器没启动 / 窗口在托盘且唤起失败（未开页面、不耗额度） |
 | `model-not-found` / `version-dropdown-missing` | 页面改版，见 `references/ui-selectors.md` |
-| `output-dir-unwritable` | 输出目录不可写，换第三参数或改脚本第 10 行 |
+| `output-dir-unwritable` | 输出目录建不了，传第三参数换个地方 |
 
 完整契约见 `SKILL.md`。
 
@@ -182,6 +169,7 @@ stdout 打印一行 JSON：
 
 | 变量 | 作用 |
 | --- | --- |
+| `QWEN_IMAGEGEN_OUT_DIR` | 覆盖默认输出目录（优先级见上） |
 | `QWEN_IMAGEGEN_DISCARD=1` | 用完即关标签组（默认复用会话） |
 | `QWEN_IMAGEGEN_NO_RETRY=1` | 关闭 `provider-error` 自动重提交 |
 

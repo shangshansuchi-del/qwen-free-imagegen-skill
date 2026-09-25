@@ -1,4 +1,4 @@
-# 千问 Studio 页面定位速查
+# Qwen Studio（千问）页面定位速查
 
 仅在 `scripts/qwen_image.sh` 报 `model-not-found`、`version-dropdown-missing` 或页面改版时阅读。
 

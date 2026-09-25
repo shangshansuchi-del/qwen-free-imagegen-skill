@@ -7,7 +7,9 @@ set -uo pipefail
 
 MODEL_DEFAULT="Qwen-Image 3.0"
 RATIO_DEFAULT="3:4"
-OUT_DIR_DEFAULT="I:/images-outputs/qwen-imagegen"
+# 默认输出目录：用户「图片」文件夹下的 qwen-imagegen（Windows/Mac/Linux 通用，无需配置）。
+# 优先级：命令行第三参数 > 环境变量 QWEN_IMAGEGEN_OUT_DIR > 此默认值。
+OUT_DIR_DEFAULT="$HOME/Pictures/qwen-imagegen"
 TASK="qwen-imagegen"
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -94,14 +96,14 @@ else
   fi
 fi
 
-[ -z "$OUT" ] && OUT="${OUT_DIR_DEFAULT}/qwen-$(date +%Y%m%d-%H%M%S).png"
+[ -z "$OUT" ] && OUT="${QWEN_IMAGEGEN_OUT_DIR:-$OUT_DIR_DEFAULT}/qwen-$(date +%Y%m%d-%H%M%S).png"
 mkdir -p "$(dirname "$OUT")" 2>/dev/null || {
   echo "{\"error\":\"output-dir-unwritable\",\"detail\":\"$(dirname "$OUT")\"}"
   exit 1
 }
 OUT_POSIX="$(cd "$(dirname "$OUT")" && pwd)/$(basename "$OUT")"
 
-# Git Bash 的 /i/... 路径 Windows 版 Node 无法识别，统一转成 I:/... 形式
+# Git Bash 的 /c/... 形式路径 Windows 版 Node 无法识别，统一转成 C:/... 形式
 to_win() {
   if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1" | sed 's#\\#/#g'; else echo "$1"; fi
 }

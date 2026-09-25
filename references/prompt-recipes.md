@@ -1,4 +1,4 @@
-# 提示词指南（Qwen-Image 3.0 @ 千问 Studio）
+# 提示词指南（Qwen-Image 3.0 @ Qwen Studio）
 
 ## 0. 环境事实：先读这段
 

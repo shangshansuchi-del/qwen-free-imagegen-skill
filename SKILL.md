@@ -1,6 +1,6 @@
 ---
 name: qwen-imagegen
-description: 用 Tabbit 浏览器在千问 Studio（chat.qwen.ai）生成图片并保存为本地 PNG。当用户要求"用千问 / Qwen / 通义生成图片"、"生成一张 XX 风格的图"、"Qwen-Image 生图"，或需要指定画幅（1:1 / 3:4 / 4:3 / 16:9 / 9:16）时使用本技能。
+description: 用 Tabbit 浏览器在 Qwen Studio（千问，chat.qwen.ai）生成图片并保存为本地 PNG。当用户要求"用千问 / Qwen / 通义生成图片"、"生成一张 XX 风格的图"、"Qwen-Image 生图"，或需要指定画幅（1:1 / 3:4 / 4:3 / 16:9 / 9:16）时使用本技能。
 agent_created: true
 ---
 
@@ -25,7 +25,7 @@ Windows 用 Git Bash 解释器（系统 `bash` 可能指向 WSL 并被拦截）�
 
 - 提示词：必填，中英文皆可，含主体、造型、场景、光线、风格画质五要素，配方见 `references/prompt-recipes.md`
 - 画幅：可选，默认 `3:4`；可选 `自动` `1:1` `3:4` `4:3` `16:9` `9:16`（人物用 3:4 或 9:16，风景用 16:9）
-- 输出路径：可选，**默认固定写入 `I:/images-outputs/qwen-imagegen/qwen-<时间戳>.png`**（所有工作区共用一处，图不会散落）。传第三参数可覆盖；目录不可写（如 I 盘未挂载）会报 `output-dir-unwritable`
+- 输出路径：可选，优先级为 **命令行第三参数 > 环境变量 `QWEN_IMAGEGEN_OUT_DIR` > 默认 `~/Pictures/qwen-imagegen/qwen-<时间戳>.png`**（用户「图片」文件夹，跨平台通用、零配置）。目录建不了会报 `output-dir-unwritable`
 
 成功打印一行 JSON：`{"path":"...","bytes":5904848,"width":1792,"height":2400,"model":"Qwen-Image 3.0","ratio":"3:4"}`——**下载的是去掉 OSS 缩图参数的全尺寸原图**（无水印；3:4≈1792×2400、16:9≈2752×1536），width/height 是从 PNG 头读出的真实尺寸，不是页面缩略图的 450px。超时后只补跑下载：`/usr/bin/bash.exe scripts/qwen_image.sh --fetch <输出路径>`（同样显式给足超时）。
 
@@ -72,8 +72,8 @@ Windows 用 Git Bash 解释器（系统 `bash` 可能指向 WSL 并被拦截）�
 | `tabbit-cli-not-found`                         | 未装 Tabbit 浏览器，需用户安装                 |
 | `empty-runner-output`                          | 运行器无输出，按失败处理；确认浏览器还活着再重跑            |
 | `generation-failed`                            | 没拿到图片路径，重跑一次                        |
-| `empty-output-file`                            | 文件为空，重跑；仍空则查 I 盘是否挂载                |
-| `output-dir-unwritable`                        | 输出目录建不了（多半是 I 盘没挂载），换路径或挂载后重跑       |
+| `empty-output-file`                            | 文件为空，重跑；仍空则查输出目录所在磁盘与权限       |
+| `output-dir-unwritable`                        | 输出目录建不了（磁盘不存在/无权限），传第三参数换路径 |
 | **空输出（无任何 JSON）**                              | **一律视为失败**，不是"还在跑"，直接重跑             |
 
 ## 多模态
