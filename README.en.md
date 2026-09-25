@@ -14,7 +14,9 @@ No API key. No per-image billing. No third-party sign-up.
 
 After installing, just talk to your agent (Claude Code, Codex, WorkBuddy, …):
 
-> "Generate an image with Qwen for me: a white Shiba Inu on a neon-lit rainy street, 3:4"
+```text
+Generate an image with Qwen for me: a white Shiba Inu on a neon-lit rainy street, 3:4
+```
 
 Everything else — opening the page, picking the model, typing the prompt, waiting for the image, saving the original — it does for you. Whatever model you can use on the website, it uses. Whatever size the site produces, that's what you get.
 
@@ -76,13 +78,17 @@ Those are still rare: macOS has ego lite ([lite.ego.app](https://lite.ego.app), 
 
 Everything below is **a message you send to your agent** — copy and paste.
 
-**Step 1 · Install** — send this to your agent:
+**Step 1 · Install** — copy this line to your agent (there's a copy button in the top-right corner):
 
-> Please download https://github.com/shangshansuchi-del/qwen-imagegen into your skills folder (ask me first if you're not sure where that is), then read its SKILL.md.
+```text
+Please download https://github.com/shangshansuchi-del/qwen-imagegen into your skills folder (ask me first if you're not sure where that is), then read its SKILL.md.
+```
 
-**Step 2 · Use** — then just order like at a restaurant:
+**Step 2 · Use** — then copy lines like this (just swap in your own description):
 
-> Generate an image with Qwen Studio: a white Shiba Inu on a neon-lit rainy street, cinematic, 3:4
+```text
+Generate an image with Qwen Studio: a white Shiba Inu on a neon-lit rainy street, cinematic, 3:4
+```
 
 **Before the first run**: sign in to chat.qwen.ai in the Tabbit browser (see ⚠️ above).
 
