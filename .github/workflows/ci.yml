@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: bash 语法检查
+        run: bash -n scripts/qwen_image.sh
+
+      - name: JS 片段语法检查（它们是 async 函数体，需包一层再验）
+        run: |
+          for f in scripts/generate.js scripts/wait_download.js; do
+            { echo "(async () => {"; cat "$f"; echo "})();"; } > /tmp/fragment.mjs
+            node --check /tmp/fragment.mjs
+          done
+
+      - name: 入仓文件必须保持 LF 行尾
+        run: |
+          if git ls-files --eol | awk '{print $1}' | grep -qE 'i/crlf|i/mixed'; then
+            echo "发现非 LF 行尾的文件："
+            git ls-files --eol | grep -E 'i/crlf|i/mixed'
+            exit 1
+          fi
+          echo "全部为 LF ✓"

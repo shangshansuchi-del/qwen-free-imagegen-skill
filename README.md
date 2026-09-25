@@ -1,16 +1,16 @@
 # qwen-imagegen
 
-**中文**：一个给 AI Agent 用的生图技能。装好之后，你用平时说话的方式告诉你的 Agent，它就会替你打开 Qwen Studio（千问，chat.qwen.ai），把你要的画面填进去，等画完，把**全尺寸原图**存到你电脑的「图片」文件夹里。
+[![CI](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml/badge.svg)](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml) ![release](https://img.shields.io/badge/release-v0.1.0-orange) ![license](https://img.shields.io/badge/license-MIT-blue)
 
-**English**: An Agent Skill for image generation. Tell your AI agent what you want in plain language — it opens Qwen Studio (chat.qwen.ai) in a browser, fills in your prompt, waits for the image, and saves the **full-resolution original** to your Pictures folder.
+[English](README.en.md) · 简体中文
+
+一个给 AI Agent 用的生图技能。装好之后，你用平时说话的方式告诉你的 Agent，它就会替你打开 Qwen Studio（千问，chat.qwen.ai），把你要的画面填进去，等画完，把**全尺寸原图**存到你电脑的「图片」文件夹里。
 
 不需要 API Key，不按张收费，不用注册任何第三方服务。
 
-No API key. No per-image billing. No third-party sign-up.
-
 ---
 
-## 这是个什么东西 / What is this
+## 这是个什么东西
 
 装好之后，跟你的 Agent（Claude Code、Codex、WorkBuddy……都行）说人话就行：
 
@@ -18,11 +18,9 @@ No API key. No per-image billing. No third-party sign-up.
 
 剩下的——打开网页、选模型、填提示词、等出图、存原图——全是它替你干。你在网页上能用什么模型，它就能用什么模型；网页给你多大尺寸的图，它就存多大的图。
 
-You just talk. The agent does the clicking.
-
 ---
 
-## 里面自带的生图提示词（这才是重点） / Built-in prompt recipes
+## 里面自带的生图提示词（这才是重点）
 
 "帮你点网页"的技能到处都是。真正决定画质好坏的，是**交给网页的那句话怎么写**。
 
@@ -36,11 +34,9 @@ You just talk. The agent does the clicking.
 
 而且这条是写进技能规则的：**你只给一句话（比如"来张猫"）时，Agent 必须先按模板补全再提交**，不许原样丢给网页——"随手一句"和"能用的图"，差别就在这。
 
-Anyone can script the clicking. What decides image quality is **the prompt** — and that's what ships inside this skill. Say "draw a cat" and your agent expands it with the recipe first, never sends it raw.
-
 ---
 
-## 为什么不用 API / Why not an API
+## 为什么不用 API
 
 市面上"免费生图 API"一般来自聚合站，而聚合站有两个老毛病：**模型可能被悄悄换成廉价旧款**，**画质经常被降档**。
 
@@ -55,17 +51,15 @@ Anyone can script the clicking. What decides image quality is **the prompt** —
 
 ---
 
-## ⚠️ 用之前必须知道：登录态 / You must be logged in
+## ⚠️ 用之前必须知道：登录态
 
 **它不会帮你登录，也永远不会碰你的账号和密码。**
 
 它用的，是浏览器里**已经登录着的那个千问**。所以第一次用之前，先在 Tabbit 浏览器里打开 [chat.qwen.ai](https://chat.qwen.ai) 登录好。登录这件事，它替不了你，也不该替你。
 
-It never touches your password. It uses the Qwen session **you are already logged into** — so sign in yourself, once, before the first run.
-
 ---
 
-## 它驱动哪个浏览器 / Which browser it drives
+## 它驱动哪个浏览器
 
 这个技能最大的特点：它驱动的是**给 Agent 用的浏览器**。
 
@@ -78,7 +72,7 @@ It never touches your password. It uses the Qwen session **you are already logge
 
 ---
 
-## 怎么装、怎么用 / Install & use
+## 怎么装、怎么用
 
 都是**发给 Agent 的话**，复制粘贴就行。
 
@@ -97,11 +91,9 @@ It never touches your password. It uses the Qwen session **you are already logge
 - 生图要几十秒到几分钟，告诉你的 Agent：「**超时至少给 10 分钟**」——提前掐掉只会看到一片空白
 - 画完 Agent 会把图片的保存路径报给你
 
-**Step 1 · Install** — paste the first message to your agent. **Step 2 · Use** — just talk to it. Sign in to chat.qwen.ai in Tabbit first.
-
 ---
 
-## 图片存在哪 / Where images are saved
+## 图片存在哪
 
 **默认存在你电脑的「图片」文件夹**下的 `qwen-imagegen` 子文件夹里：
 
@@ -110,11 +102,9 @@ It never touches your password. It uses the Qwen session **you are already logge
 
 **什么都不用配置，装好就能用。** 想换个地方存？跟 Agent 说一声就行（它支持指定路径，也有环境变量开关，见下面的技术细节）。
 
-By default images go to the `qwen-imagegen` folder inside your **Pictures** folder. Zero configuration.
-
 ---
 
-## 出问题了怎么办 / When something goes wrong
+## 出问题了怎么办
 
 **如果屏幕上什么都没显示，那就是失败了，直接再跑一次。** 这不是"还在画"。
 
@@ -127,9 +117,9 @@ By default images go to the `qwen-imagegen` folder inside your **Pictures** fold
 
 ---
 
-# 技术细节 / Technical details
+# 技术细节
 
-## 工作原理 / How it works
+## 工作原理
 
 `scripts/qwen_image.sh` 是唯一入口：预检浏览器 → 复用上次的标签组和对话（同一对话延续，不散落）→ 驱动页面选「图像生成」模式、锁定 Qwen-Image 3.0、填提示词提交 → 轮询 DOM 等完成 → 抓**去掉 OSS 缩图参数的全尺寸原图** → 存 PNG → 打印结果。
 
@@ -139,13 +129,13 @@ By default images go to the `qwen-imagegen` folder inside your **Pictures** fold
 {"path":"C:/you/Pictures/qwen-imagegen/qwen-20260926-001530.png","bytes":5904848,"width":1792,"height":2400,"model":"Qwen-Image 3.0","ratio":"3:4"}
 ```
 
-## 输出路径的三级优先级 / Output path precedence
+## 输出路径的三级优先级
 
 ```
 命令行第三参数  >  环境变量 QWEN_IMAGEGEN_OUT_DIR  >  默认 ~/Pictures/qwen-imagegen
 ```
 
-## 手动运行（调试用） / Manual run (debugging)
+## 手动运行（调试用）
 
 平时让 Agent 干就行；排查问题时才用：
 
@@ -155,7 +145,7 @@ By default images go to the `qwen-imagegen` folder inside your **Pictures** fold
 /usr/bin/bash.exe "<技能目录>/scripts/qwen_image.sh" --fetch "<输出路径>"
 ```
 
-## 后端适配（给贡献者） / Backend adaptation
+## 后端适配（给贡献者）
 
 JS 层（`generate.js` + `wait_download.js`，共 148 行）是**纯 Playwright API**（`page.goto` / `getByRole` / `locator` / `evaluateAll`），没有任何 `require("playwright")`——`page` 由外部注入（Tabbit 的 `nodejs` 子命令把文件内容包进 async 函数体执行）。**换后端不用动页面逻辑**，只需适配 4 个动作：
 
@@ -166,7 +156,7 @@ JS 层（`generate.js` + `wait_download.js`，共 148 行）是**纯 Playwright 
 | 关闭 / 废弃任务 | `finish [--discard]` | `page.close()` / `context.close()` |
 | 复用会话 | `resume --group` | 固定 `userDataDir` 的持久化 context |
 
-## 错误码 / Error codes
+## 错误码
 
 **空输出 = 失败**，直接重跑。
 
@@ -181,7 +171,7 @@ JS 层（`generate.js` + `wait_download.js`，共 148 行）是**纯 Playwright 
 
 完整契约见 `SKILL.md`。
 
-## 环境变量 / Environment variables
+## 环境变量
 
 | 变量 | 作用 |
 | --- | --- |
@@ -189,7 +179,7 @@ JS 层（`generate.js` + `wait_download.js`，共 148 行）是**纯 Playwright 
 | `QWEN_IMAGEGEN_DISCARD=1` | 用完即关标签组（默认复用会话） |
 | `QWEN_IMAGEGEN_NO_RETRY=1` | 关闭 `provider-error` 自动重提交 |
 
-## 目录结构 / Layout
+## 目录结构
 
 ```
 qwen-imagegen/
@@ -203,7 +193,7 @@ qwen-imagegen/
     └── ui-selectors.md           # 页面结构、选择器、接口抓包
 ```
 
-## 免责声明 / Disclaimer
+## 免责声明
 
 - 仅供编程学习、浏览器自动化研究与个人使用，与阿里云 / 通义千问官方无关。
 - 请遵守千问平台的用户服务协议与内容规范。
