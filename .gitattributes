@@ -1,0 +1,14 @@
+# 行尾统一为 LF。
+# 原因：本技能的核心是 .sh 脚本，bash 遇到 CRLF 行尾会把 \r 当成命令的一部分，
+# 表现为 "bad interpreter" 或参数莫名带回车 —— 在 Windows 上 clone 后必炸。
+* text=auto eol=lf
+
+*.sh  text eol=lf
+*.js  text eol=lf
+*.md  text eol=lf
+
+# 二进制不参与转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary

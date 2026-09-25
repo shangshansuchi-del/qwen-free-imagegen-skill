@@ -1,0 +1,15 @@
+# 生成的图片（本地产物，不入库）
+outputs/
+
+# Python 编译缓存
+__pycache__/
+*.pyc
+
+# 运行时临时文件（脚本按 PID 生成）
+*-cfg-*.json
+*-result-*.json
+*-minimize-*.ps1
+
+# 系统
+.DS_Store
+Thumbs.db
