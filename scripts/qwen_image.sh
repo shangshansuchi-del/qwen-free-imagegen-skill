@@ -2,6 +2,7 @@
 # qwen_image.sh - 千问 Studio 生图唯一入口
 #   用法: /usr/bin/bash.exe <skill-dir>/scripts/qwen_image.sh "<提示词>" [画幅] [输出路径]
 #         /usr/bin/bash.exe <skill-dir>/scripts/qwen_image.sh --fetch [输出路径]
+#         /usr/bin/bash.exe <skill-dir>/scripts/qwen_image.sh --doctor  # 首次体检：检测后端，不生图
 # 失败时一定打印 {"error":"..."} 并以非零码退出，绝不静默返回空。
 set -uo pipefail
 
@@ -12,6 +13,34 @@ RATIO_DEFAULT="3:4"
 OUT_DIR_DEFAULT="$HOME/Pictures/qwen-imagegen"
 TASK="qwen-imagegen"
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# 首次体检：装好之后第一次用之前跑一次，问清楚"用哪个后端"，别等报错再返工（报错一次=白烧一轮 token）
+# 不开浏览器、不消耗额度、秒回。
+if [ "${1:-}" = "--doctor" ]; then
+  TABBIT_OK=0
+  if [ -n "${LOCALAPPDATA:-}" ] && [ -f "${LOCALAPPDATA}/Tabbit/LocalAgent/bin/tabbit-cli.exe" ]; then
+    TABBIT_OK=1
+  elif [ -f "$HOME/.local/bin/tabbit-cli" ]; then
+    TABBIT_OK=1
+  fi
+
+  CDP_PORT=""
+  if command -v node >/dev/null 2>&1; then
+    for p in 9222 9223; do
+      r="$(node -e 'fetch("http://127.0.0.1:"+process.argv[1]+"/json/version",{signal:AbortSignal.timeout(1500)}).then(r=>r.ok?r.text():Promise.reject()).then(t=>console.log(t)).catch(()=>{})' "$p" 2>/dev/null)"
+      if [ -n "$r" ]; then CDP_PORT="$p"; break; fi
+    done
+  fi
+
+  if [ "$TABBIT_OK" = "1" ]; then
+    echo "{\"tabbit\":true,\"cdp_port\":\"${CDP_PORT:-closed}\",\"recommended_backend\":\"tabbit\",\"next\":\"直接按 SKILL.md 正常调用即可，无需任何配置\"}"
+  elif [ -n "$CDP_PORT" ]; then
+    echo "{\"tabbit\":false,\"cdp_port\":\"$CDP_PORT\",\"recommended_backend\":\"cdp\",\"next\":\"浏览器调试端口已开，可用 CDP 后端（开发中）\"}"
+  else
+    echo "{\"tabbit\":false,\"cdp_port\":\"closed\",\"recommended_backend\":\"none\",\"next\":\"两个后端都不可用：装 Tabbit，或给 Chrome/Edge 加 --remote-debugging-port=9222 后重启（必须用原来的用户配置，登录态才不会丢），详见 README 的 CDP 配置章节\"}"
+  fi
+  exit 0
+fi
 
 if [ -n "${LOCALAPPDATA:-}" ] && [ -f "${LOCALAPPDATA}/Tabbit/LocalAgent/bin/tabbit-cli.exe" ]; then
   CLI="${LOCALAPPDATA}/Tabbit/LocalAgent/bin/tabbit-cli.exe"

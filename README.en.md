@@ -15,7 +15,7 @@ No API key. No per-image billing. No third-party sign-up.
 After installing, just talk to your agent (Claude Code, Codex, WorkBuddy, …):
 
 ```text
-Generate an image with Qwen for me: a white Shiba Inu on a neon-lit rainy street, 3:4
+Draw me with Qwen: a girl in a kimono under a cherry blossom tree, anime illustration, 3:4
 ```
 
 Everything else — opening the page, picking the model, typing the prompt, waiting for the image, saving the original — it does for you. Whatever model you can use on the website, it uses. Whatever size the site produces, that's what you get.
@@ -53,6 +53,19 @@ This skill drives the browser and uses the web version directly, skipping the mi
 
 ---
 
+## How big are the images
+
+What gets saved is the **full-size original** (the script strips the site's thumbnail parameters) — not the little preview you see on the page:
+
+| Ratio | Actual pixels | In plain terms |
+| --- | --- | --- |
+| 3:4 (portrait, best for characters) | 1792 × 2400 | ~4.3 MP, **more than twice 1080p** (1920×1080), close to 2K portrait |
+| 16:9 (landscape, best for scenery) | 2752 × 1536 | ~4.2 MP, **above 1080p**, close to 2K (2560×1440) |
+
+Sizes are read from the PNG header — real values, not estimates.
+
+---
+
 ## ⚠️ You must be logged in first
 
 **It never logs in for you, and it never touches your account or password.**
@@ -81,20 +94,21 @@ Everything below is **a message you send to your agent** — copy and paste.
 **Step 1 · Install** — copy this line to your agent (there's a copy button in the top-right corner):
 
 ```text
-Please download https://github.com/shangshansuchi-del/qwen-imagegen into your skills folder (ask me first if you're not sure where that is), then read its SKILL.md.
+Please download https://github.com/shangshansuchi-del/qwen-imagegen into my skills folder, then read SKILL.md.
 ```
 
-**Step 2 · Use** — then copy lines like this (just swap in your own description):
+**Step 2 · Use** — copy this one and watch what comes out (then swap in anything you like):
 
 ```text
-Generate an image with Qwen Studio: a white Shiba Inu on a neon-lit rainy street, cinematic, 3:4
+Generate an image with Qwen Studio: anime-style half-body illustration, a girl with silver-grey gradient twin-tails and amber eyes, white sailor uniform with a navy ribbon, sakura petals drifting down a school corridor, afternoon light filtering through leaves, soft cel-shading, clean linework, 3:4
 ```
 
 **Before the first run**: sign in to chat.qwen.ai in the Tabbit browser (see ⚠️ above).
 
 **Two reminders**:
 
-- Image generation takes from tens of seconds to a few minutes — tell your agent "**use a timeout of at least 10 minutes**". Killing it early just shows a blank output.
+- **Don't let it get killed**: generation takes tens of seconds to a few minutes, and many terminals kill the process after **2 minutes** — you'd just get a blank output. So tell your agent: "**set the timeout to 10 minutes, don't rush it**"
+- **Run a checkup first**: have the agent run `--doctor` (see technical details) to settle which backend to use in one go — **an error round-trip is a wasted round of tokens**
 - When it's done, the agent reports the saved file path to you.
 
 ---
@@ -163,14 +177,34 @@ CDP doesn't switch itself on — **you have to open a "debugging door" on Chrome
    - Windows · Chrome: `"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222`
    - macOS: `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222`
 
-   Tired of typing it? **Copy a shortcut** and append `--remote-debugging-port=9222` to its target — just launch from that shortcut afterwards.
+   (The debugging port **cannot be opened retroactively** on an already-running browser — it has to be relaunched with the flag, once.)
 3. **Verify the door is open**: open `http://127.0.0.1:9222/json/version` in the browser — if you see a chunk of JSON containing `"Browser"`, you're done
 4. Then sign in to [chat.qwen.ai](https://chat.qwen.ai) as usual — **the login state stays in your own browser**; the script just borrows it
+
+Don't want to type it? **Let your agent do it**: on first use it runs a checkup (`--doctor`, next section), and if neither backend is available it asks: "shall I restart your browser with the debugging port enabled?" Say yes, and it relaunches the browser with the flag — **using your existing profile, so your login state survives**. Once is enough; don't wait for an error round-trip.
 
 ⚠️ Two warnings:
 
 - This port is local-only (127.0.0.1). Never expose it to your LAN or the public internet — that would hand over control of your browser.
 - Closing the browser window that was launched with the flag closes the door.
+
+## Backend checkup (--doctor)
+
+```bash
+/usr/bin/bash.exe "<skill-dir>/scripts/qwen_image.sh" --doctor
+```
+
+No browser, no quota, instant answer to a single question: **which backend should this machine use?**
+
+```json
+{"tabbit":true,"cdp_port":"closed","recommended_backend":"tabbit","next":"Just call it per SKILL.md — no configuration needed"}
+```
+
+- `"recommended_backend":"tabbit"` → just use it, nothing to configure
+- `"cdp"` → a debugging port is open, use the CDP backend (in development)
+- `"none"` → neither is available; set one up first (previous section)
+
+Detection order: **① `QWEN_IMAGEGEN_BACKEND` env var → ② Tabbit → ③ CDP port (9222 / 9223)**.
 
 ## Backend adaptation (for contributors)
 
@@ -203,6 +237,7 @@ Full contract in `SKILL.md`.
 | Variable | Purpose |
 | --- | --- |
 | `QWEN_IMAGEGEN_OUT_DIR` | Override the default output directory (precedence above) |
+| `QWEN_IMAGEGEN_BACKEND` | Force a backend: `tabbit` or `cdp` (default: auto-detect Tabbit → CDP) |
 | `QWEN_IMAGEGEN_DISCARD=1` | Close the tab group after each run (default: reuse the session) |
 | `QWEN_IMAGEGEN_NO_RETRY=1` | Disable the automatic `provider-error` resubmit |
 

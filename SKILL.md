@@ -16,6 +16,20 @@ Windows 用 Git Bash 解释器（系统 `bash` 可能指向 WSL 并被拦截）�
 /usr/bin/bash.exe "$HOME/.workbuddy/skills/qwen-imagegen/scripts/qwen_image.sh" "<提示词>" [画幅] [输出路径]
 ```
 
+**首次使用：先体检，别等报错**（不开浏览器、不耗额度、秒级返回）：
+
+```bash
+/usr/bin/bash.exe "$HOME/.workbuddy/skills/qwen-imagegen/scripts/qwen_image.sh" --doctor
+```
+
+按结果行动，**一次问清楚**——报错一次就白烧一轮 token：
+
+| 返回 | 怎么办 |
+| --- | --- |
+| `"recommended_backend":"tabbit"` | 直接正常生图，无需任何配置 |
+| `"cdp"` | 浏览器调试端口已开 → 走 CDP 后端（开发中） |
+| `"none"` | 两个后端都不可用 → 让用户装 Tabbit，或给 Chrome/Edge 加 `--remote-debugging-port=9222` 并**用原用户配置**重启一次（登录态不会丢）；配好再回来生图 |
+
 **Tabbit 浏览器没打开时**：脚本开头做预检，浏览器没起来报 `{"error":"tabbit-not-running"}` 并 exit 3，一个页面都不开。只有 `tabbit-cli-not-found` 才是浏览器没安装。
 
 **但"只读探活"覆盖不了托盘态**（2026-09-25 实测）：Tabbit 进程活着、窗口全关收进托盘时，`tabs` 探活返回的是合法空列表（`{"tabs":[],"total":0}`、rc=0）会**放行**，而真正建页时在 4–5 毫秒内失败（`Target.createTarget: Task-scoped CDP command could not be dispatched`，`diagnose` 也照样报 `ok:true`）。现在预检是**功能性探针**：用一次性任务 `tabbit-preflight` 真建一个空白页试探 → 失败就 `Start-Process` 唤起窗口、每 3 秒重试（最多 24 秒）→ 成功后立刻最小化并打印 `{"tabbit-window-restored":"minimized"}` → 仍不行报 `{"error":"tabbit-no-window"}` exit 3（未开页面、不消耗额度）。
