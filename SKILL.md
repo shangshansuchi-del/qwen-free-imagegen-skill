@@ -1,6 +1,6 @@
 ---
 name: qwen-imagegen
-description: 用 Tabbit 浏览器在 Qwen Studio（千问，chat.qwen.ai）生成图片并保存为本地 PNG。当用户要求"用千问 / Qwen / 通义生成图片"、"生成一张 XX 风格的图"、"Qwen-Image 生图"，或需要指定画幅（1:1 / 3:4 / 4:3 / 16:9 / 9:16）时使用本技能。
+description: 用浏览器（Tabbit，或你自己的 Chrome/Edge 经 CDP）驱动 Qwen Studio（千问，chat.qwen.ai）生成图片并存为本地全尺寸 PNG —— 无需 API Key、免费。Browser-driven free image generation Agent Skill：drive Qwen Studio in a real browser and save full-resolution PNGs with no API key. 当用户要求"用千问 / Qwen / 通义生成图片"、"生成一张 XX 风格的图"、"Qwen-Image 生图"、"free image generation"、"text-to-image"、"generate an image without API key"，或需要指定画幅（1:1 / 3:4 / 4:3 / 16:9 / 9:16）时使用本技能。
 agent_created: true
 ---
 

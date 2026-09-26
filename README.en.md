@@ -1,6 +1,6 @@
 # qwen-imagegen
 
-[![CI](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml/badge.svg)](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml) ![v0.1.0](https://img.shields.io/badge/v0.1.0-orange) ![license](https://img.shields.io/badge/license-MIT-blue)
+[![CI](https://github.com/shangshansuchi-del/qwen-free-imagegen-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/shangshansuchi-del/qwen-free-imagegen-skill/actions/workflows/ci.yml) ![v0.1.0](https://img.shields.io/badge/v0.1.0-orange) ![license](https://img.shields.io/badge/license-MIT-blue)
 
 English · [简体中文](README.md)
 
@@ -108,7 +108,7 @@ Everything below is **a message you send to your agent** — copy and paste.
 **Step 1 · Install** — copy this line to your agent (there's a copy button in the top-right corner):
 
 ```text
-Please download https://github.com/shangshansuchi-del/qwen-imagegen into my skills folder, then read SKILL.md.
+Please download https://github.com/shangshansuchi-del/qwen-free-imagegen-skill into my skills folder, then read SKILL.md.
 ```
 
 **Step 2 · Use** — copy this one and watch what comes out (then swap in anything you like):
