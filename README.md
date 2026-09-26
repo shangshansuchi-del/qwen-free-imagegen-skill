@@ -1,6 +1,6 @@
 # qwen-imagegen
 
-[![CI](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml/badge.svg)](https://github.com/shangshansuchi-del/qwen-imagegen/actions/workflows/ci.yml) ![v0.1.0](https://img.shields.io/badge/v0.1.0-orange) ![license](https://img.shields.io/badge/license-MIT-blue)
+[![CI](https://github.com/shangshansuchi-del/qwen-free-imagegen-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/shangshansuchi-del/qwen-free-imagegen-skill/actions/workflows/ci.yml) ![v0.1.0](https://img.shields.io/badge/v0.1.0-orange) ![license](https://img.shields.io/badge/license-MIT-blue)
 
 [English](README.en.md) · 简体中文
 
@@ -116,7 +116,7 @@
 **第一步 · 装**，把下面这句话复制给你的 Agent（右上角有复制键）：
 
 ```text
-请把 https://github.com/shangshansuchi-del/qwen-imagegen 下载到我的技能文件夹里，然后读一下 SKILL.md。
+请把 https://github.com/shangshansuchi-del/qwen-free-imagegen-skill 下载到我的技能文件夹里，然后读一下 SKILL.md。
 ```
 
 **第二步 · 用**，把下面这句复制给它（照抄就能看出效果，之后随便改成你想要的）：
