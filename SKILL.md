@@ -27,8 +27,17 @@ Windows 用 Git Bash 解释器（系统 `bash` 可能指向 WSL 并被拦截）�
 | 返回 | 怎么办 |
 | --- | --- |
 | `"recommended_backend":"tabbit"` | 直接正常生图，无需任何配置 |
-| `"cdp"` | 浏览器调试端口已开 → 走 CDP 后端（开发中） |
-| `"none"` | 两个后端都不可用 → 让用户装 Tabbit，或给 Chrome/Edge 加 `--remote-debugging-port=9222` 并**用原用户配置**重启一次（登录态不会丢）；配好再回来生图 |
+| `"recommended_backend":"cdp"` + `"playwright_core":1` | 浏览器调试端口已开，可直接用 CDP 后端 |
+| `"recommended_backend":"cdp"` + `"playwright_core":0` | 缺依赖：在技能目录跑一次 `npm install playwright-core` |
+| `"recommended_backend":"none"` | 两个后端都不可用 → 让用户装 Tabbit，或给 Chrome/Edge 加 `--remote-debugging-port=9222` 并**用原用户配置**重启一次（登录态不会丢） |
+
+## 后端：Tabbit / CDP
+
+`QWEN_IMAGEGEN_BACKEND` 可强制 `tabbit` 或 `cdp`；不设则自动探测（**有 Tabbit 优先走 Tabbit**，其次 CDP 端口 9222）。
+日常用 Tabbit 无需任何配置。只有当用户**没有 Tabbit、要用自己的 Chrome / Edge** 时，才读
+`references/cdp-backend.md`（含两步配置、依赖、实现要点与排错表）。
+
+⚠️ CDP 路线可能触发千问的**人机验证**（返回 `verification-required`，需人工过一次）；**Tabbit 路线没有这个风险**。
 
 **Tabbit 浏览器没打开时**：脚本开头做预检，浏览器没起来报 `{"error":"tabbit-not-running"}` 并 exit 3，一个页面都不开。只有 `tabbit-cli-not-found` 才是浏览器没安装。
 

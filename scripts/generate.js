@@ -24,9 +24,32 @@ for (let i = 0; i < 20; i++) {
   await page.waitForTimeout(1000);
 }
 if (!profile) {
+  // 人机验证探测（2026-09-26 用户实测）：Qwen Studio 识别到自动化会弹安全验证。
+  // CDP 路线（接管普通浏览器）触发过；Tabbit 专用通道没这个风险。
+  // 命中时给可执行提示，别让人误以为是"没登录"而白跑一轮。
+  let challenge = false;
+  try {
+    challenge =
+      (await page
+        .locator('iframe[src*="captcha" i], [class*="captcha" i], [id*="captcha" i], [class*="verify" i], [class*="slider" i]')
+        .count()) > 0;
+    if (!challenge) {
+      const t = await page.locator("body").innerText({ timeout: 2500 }).catch(() => "");
+      challenge = /安全验证|人机验证|请完成验证|拖动滑块|滑动验证|verify you are human|unusual traffic/i.test(t);
+    }
+  } catch (e) {
+    /* 探测失败按未命中处理 */
+  }
+  if (challenge) {
+    return {
+      error: "verification-required",
+      hint: "千问弹了人机验证（自动化被识别）：请在浏览器里手动完成验证，然后重跑本脚本；不要关这个浏览器窗口",
+      waitedMs: 20000,
+    };
+  }
   return {
     error: "login-required",
-    hint: "在 Tabbit 浏览器里登录千问账号后重跑",
+    hint: "在浏览器里登录千问账号后重跑（Tabbit 或你自己的 Chrome/Edge 都行）",
     waitedMs: 20000,
   };
 }

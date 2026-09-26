@@ -105,7 +105,7 @@
 | 后端 | 状态 | 说明 |
 | --- | --- | --- |
 | **Tabbit** | ✅ 当前支持 | 本技能目前只在 Windows 上实测过 |
-| 你自己的 Chrome / Edge（CDP 直连） | 🚧 规划中 | 复用你已有的登录态，不用再装东西——**但要先给浏览器开个调试端口**，步骤见文末 |
+| 你自己的 Chrome / Edge（CDP 直连） | ✅ 已支持 | 复用你已有的登录态，不用再装浏览器——**但要先开调试端口 + 装一次依赖**，见文末两步。⚠️ 可能触发千问的人机验证 |
 
 ---
 
@@ -187,11 +187,13 @@
 /usr/bin/bash.exe "<技能目录>/scripts/qwen_image.sh" --fetch "<输出路径>"
 ```
 
-## 用自带浏览器（CDP）之前，先做一步配置
+## 用自带浏览器（CDP）：两步配置（一次性）
 
-> 这条路线还在开发（🚧），先把配置写清楚，方便你提前准备。
+**第一步 · 给浏览器开"调试门"**——CDP 不会自己生效，得让 Chrome / Edge 把门打开，Playwright 才能接管它：
 
-CDP 不会自己生效——**你得先让 Chrome / Edge 把"调试门"打开**，Playwright 才能接管它：
+> 用 Tabbit 的话**不需要这一步**：Tabbit 有自己的专用通道（本技能默认就走它）。CDP 这条路是给**用 Chrome / Edge 的人**准备的。
+>
+> ⚠️ **CDP 路线的已知代价**：千问可能认出这是自动化并弹出**人机验证**，需要你手动过一次（脚本会报 `verification-required` 明确提示）。**Tabbit 路线不会触发这个**——它本来就是给 Agent 用的浏览器。
 
 1. **完全退出** Chrome / Edge（托盘里也要退出，否则启动参数会被忽略）
 2. 带参数重新启动：
@@ -204,6 +206,14 @@ CDP 不会自己生效——**你得先让 Chrome / Edge 把"调试门"打开**�
 4. 然后正常登录 [chat.qwen.ai](https://chat.qwen.ai)——**登录态就留在你自己的浏览器里**，脚本只是接过去用
 
 嫌自己敲麻烦？**让 Agent 帮你**：第一次用的时候它会先跑一次体检（`--doctor`，见下一节），发现两个后端都不可用时，会问你一句"现在帮你把浏览器重启一次、把调试端口开好吗？"——你点头，它就关掉浏览器再带参数拉起来。**用的是你原来的用户配置，登录态不会丢。**一次就好，别等报错再返工。
+
+**第二步 · 装一次依赖**（只有 CDP 这条路需要；Tabbit 用户跳过）：
+
+```text
+npm install playwright-core
+```
+
+在技能目录下跑一次（约 14 MB，纯库、**不含**浏览器）。装完 `--doctor` 会显示 `"playwright_core":1`，就算就绪。
 
 ⚠️ 两个提醒：
 
@@ -251,6 +261,10 @@ JS 层（`generate.js` + `wait_download.js`，共 148 行）是**纯 Playwright 
 | `tabbit-not-running` / `tabbit-no-window` | 浏览器没启动 / 窗口在托盘且唤起失败（未开页面、不耗额度） |
 | `model-not-found` / `version-dropdown-missing` | 页面改版，见 `references/ui-selectors.md` |
 | `output-dir-unwritable` | 输出目录建不了，传第三参数换个地方 |
+| `cdp-port-closed` | 浏览器没开调试端口（或端口号不对，默认 9222） |
+| `cdp-need-playwright-core` | CDP 缺依赖：在技能目录跑一次 `npm install playwright-core` |
+| `verification-required` | 千问弹了人机验证（自动化被识别）：手动过一次验证后重跑；**Tabbit 路线不会遇到** |
+| `no-backend` | Tabbit 和 CDP 都不可用 → 先跑 `--doctor` 看该怎么办 |
 
 完整契约见 `SKILL.md`。
 
@@ -260,6 +274,8 @@ JS 层（`generate.js` + `wait_download.js`，共 148 行）是**纯 Playwright 
 | --- | --- |
 | `QWEN_IMAGEGEN_OUT_DIR` | 覆盖默认输出目录（优先级见上） |
 | `QWEN_IMAGEGEN_BACKEND` | 强制指定后端：`tabbit` 或 `cdp`（默认自动探测：Tabbit → CDP） |
+| `QWEN_IMAGEGEN_CDP_PORT` | CDP 调试端口（默认 9222） |
+| `QWEN_IMAGEGEN_CDP_KEEP_PROXY=1` | CDP 后端保留系统代理（默认会摘掉，否则本机 127.0.0.1 也会被代理劫持） |
 | `QWEN_IMAGEGEN_DISCARD=1` | 用完即关标签组（默认复用会话） |
 | `QWEN_IMAGEGEN_NO_RETRY=1` | 关闭 `provider-error` 自动重提交 |
 
@@ -269,11 +285,13 @@ JS 层（`generate.js` + `wait_download.js`，共 148 行）是**纯 Playwright 
 qwen-imagegen/
 ├── SKILL.md                      # 技能入口 + 完整错误码契约
 ├── scripts/
-│   ├── qwen_image.sh             # 主流程：浏览器调度、重试、输出 JSON
+│   ├── qwen_image.sh             # 主流程：后端分派、重试、输出 JSON
+│   ├── runner_cdp.js             # CDP 后端运行器：attach 用户自己的浏览器
 │   ├── generate.js               # 页面操作：选模式 / 选模型 / 填提示词 / 提交
 │   └── wait_download.js          # 等出图完成 + 抓全尺寸原图
 └── references/
     ├── prompt-recipes.md         # 生图提示词配方：两套公式 / 三档模板 / 8 类配方 / 六反例 / 自检表
+    ├── cdp-backend.md            # 只有走 CDP 时才读：两步配置 / 依赖 / 实现要点 / 排错
     └── ui-selectors.md           # 页面结构、选择器、接口抓包
 ```
 

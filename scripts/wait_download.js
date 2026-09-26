@@ -66,6 +66,27 @@ if (!target) {
       rejectedNoPrompt,
     };
   }
+  // 人机验证探测（2026-09-26 用户实测）：Qwen Studio 识别到自动化会弹安全验证，
+  // 表现为"图永远不来"。CDP 路线触发过；Tabbit 专用通道没这个风险。
+  let challenge = false;
+  try {
+    challenge =
+      (await page
+        .locator('iframe[src*="captcha" i], [class*="captcha" i], [id*="captcha" i], [class*="verify" i], [class*="slider" i]')
+        .count()) > 0;
+    if (!challenge) {
+      const t = await page.locator("body").innerText({ timeout: 2500 }).catch(() => "");
+      challenge = /安全验证|人机验证|请完成验证|拖动滑块|滑动验证|verify you are human|unusual traffic/i.test(t);
+    }
+  } catch (e) {
+    /* 探测失败按未命中处理 */
+  }
+  if (challenge) {
+    return {
+      error: "verification-required",
+      hint: "千问弹了人机验证（自动化被识别）：请在浏览器里手动完成验证，然后重跑（CDP 路线常见；Tabbit 不会触发）",
+    };
+  }
   return {error: "timeout", hint: "重跑 bash scripts/qwen_image.sh --fetch <输出路径> 继续等待"};
 }
 

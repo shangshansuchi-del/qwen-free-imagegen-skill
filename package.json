@@ -1,0 +1,10 @@
+{
+  "name": "qwen-imagegen",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Agent Skill：驱动 Qwen Studio 网页版生图（Tabbit / CDP 双后端）",
+  "comment": "playwright-core 只有 CDP 后端需要（Tabbit 后端零依赖）。在技能目录跑一次 npm install 即可。",
+  "dependencies": {
+    "playwright-core": "^1.63.0"
+  }
+}

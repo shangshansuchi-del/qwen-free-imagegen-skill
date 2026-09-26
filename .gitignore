@@ -1,7 +1,7 @@
 # 生成的图片（本地产物，不入库）
 outputs/
 
-# 依赖（CDP 后端需要 playwright-core，用户自行 npm install）
+# CDP 后端依赖（用户自行 npm install playwright-core）
 node_modules/
 package-lock.json
 
