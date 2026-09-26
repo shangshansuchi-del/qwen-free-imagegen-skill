@@ -66,6 +66,20 @@ Sizes are read from the PNG header — real values, not estimates.
 
 ---
 
+## Token cost: how much one image burns
+
+Measured: **roughly 500K+ tokens for one complete generation** (agent-driven, including script round-trips).
+
+Why it stays in that range — the whole flow **never looks at an image**:
+
+- **No screenshots**: completion is detected from DOM facts (real image dimensions, status-bar model name, ratio label), not by repeatedly screenshotting for the model to look at. Images in context are one of the most expensive line items.
+- **Reasoning lives in the script**: how to click, when to retry, how to grab the original — all in the script. The agent sends one command and reads one line of JSON.
+- **Structured failure exits**: errors come back as `{"error":"..."}`, so the agent doesn't have to poke around the page to figure out why.
+
+**Compared with similar projects**: other browser-driving / computer-use style setups typically loop "screenshot → send the screenshot plus the full DOM back to the model → model decides", which lands in the **million-token range per run** (a mechanism-based estimate; varies with step count and model — no specific project named here). This skill moves those decisions into the script layer, so it spends less.
+
+---
+
 ## ⚠️ You must be logged in first
 
 **It never logs in for you, and it never touches your account or password.**
