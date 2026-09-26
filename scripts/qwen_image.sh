@@ -32,24 +32,62 @@ if [ "${1:-}" = "--doctor" ]; then
     done
   fi
 
+  PW_OK=0
+  [ -d "$SKILL_DIR/node_modules/playwright-core" ] && PW_OK=1
+  NODE_OK=0
+  command -v node >/dev/null 2>&1 && NODE_OK=1
+
   if [ "$TABBIT_OK" = "1" ]; then
-    echo "{\"tabbit\":true,\"cdp_port\":\"${CDP_PORT:-closed}\",\"recommended_backend\":\"tabbit\",\"next\":\"直接按 SKILL.md 正常调用即可，无需任何配置\"}"
+    echo "{\"tabbit\":true,\"cdp_port\":\"${CDP_PORT:-closed}\",\"node\":$NODE_OK,\"playwright_core\":$PW_OK,\"recommended_backend\":\"tabbit\",\"next\":\"直接按 SKILL.md 正常调用即可，无需任何配置\"}"
+  elif [ -n "$CDP_PORT" ] && [ "$PW_OK" = "1" ]; then
+    echo "{\"tabbit\":false,\"cdp_port\":\"$CDP_PORT\",\"node\":$NODE_OK,\"playwright_core\":$PW_OK,\"recommended_backend\":\"cdp\",\"next\":\"可直接用 CDP 后端（QWEN_IMAGEGEN_BACKEND=cdp 或自动探测）\"}"
   elif [ -n "$CDP_PORT" ]; then
-    echo "{\"tabbit\":false,\"cdp_port\":\"$CDP_PORT\",\"recommended_backend\":\"cdp\",\"next\":\"浏览器调试端口已开，可用 CDP 后端（开发中）\"}"
+    echo "{\"tabbit\":false,\"cdp_port\":\"$CDP_PORT\",\"node\":$NODE_OK,\"playwright_core\":$PW_OK,\"recommended_backend\":\"cdp\",\"next\":\"端口开着但缺依赖：在技能目录跑 npm install playwright-core（一次即可）\"}"
   else
-    echo "{\"tabbit\":false,\"cdp_port\":\"closed\",\"recommended_backend\":\"none\",\"next\":\"两个后端都不可用：装 Tabbit，或给 Chrome/Edge 加 --remote-debugging-port=9222 后重启（必须用原来的用户配置，登录态才不会丢），详见 README 的 CDP 配置章节\"}"
+    echo "{\"tabbit\":false,\"cdp_port\":\"closed\",\"node\":$NODE_OK,\"playwright_core\":$PW_OK,\"recommended_backend\":\"none\",\"next\":\"两个后端都不可用：装 Tabbit，或给 Chrome/Edge 加 --remote-debugging-port=9222 后重启（必须用原来的用户配置，登录态才不会丢），详见 README 的 CDP 配置章节\"}"
   fi
   exit 0
 fi
 
+CLI=""
 if [ -n "${LOCALAPPDATA:-}" ] && [ -f "${LOCALAPPDATA}/Tabbit/LocalAgent/bin/tabbit-cli.exe" ]; then
   CLI="${LOCALAPPDATA}/Tabbit/LocalAgent/bin/tabbit-cli.exe"
 elif [ -f "$HOME/.local/bin/tabbit-cli" ]; then
   CLI="$HOME/.local/bin/tabbit-cli"
-else
-  echo '{"error":"tabbit-cli-not-found","hint":"未找到 Tabbit CLI，确认已安装 Tabbit 浏览器"}'
-  exit 1
 fi
+
+# ---- 后端分派：环境变量指定 > Tabbit 可用则用 Tabbit > CDP 端口开着则用 CDP ----
+CDP_PORT="${QWEN_IMAGEGEN_CDP_PORT:-9222}"
+cdp_port_open() {
+  command -v node >/dev/null 2>&1 || return 1
+  node -e 'fetch("http://127.0.0.1:"+process.argv[1]+"/json/version",{signal:AbortSignal.timeout(1500)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))' "$1" >/dev/null 2>&1
+}
+BACKEND="${QWEN_IMAGEGEN_BACKEND:-auto}"
+case "$BACKEND" in
+  tabbit)
+    [ -n "$CLI" ] || { echo '{"error":"tabbit-cli-not-found","hint":"指定了 tabbit 后端但没找到 Tabbit CLI"}'; exit 1; } ;;
+  cdp) ;;
+  auto)
+    if [ -n "$CLI" ]; then
+      BACKEND="tabbit"
+    elif cdp_port_open "$CDP_PORT"; then
+      BACKEND="cdp"
+    else
+      echo "{\"error\":\"no-backend\",\"hint\":\"既没有 Tabbit CLI，也没有开调试端口的浏览器。装 Tabbit，或用 --remote-debugging-port=$CDP_PORT 启动 Chrome/Edge（保留原用户配置，登录态不丢）；先跑 --doctor 看体检结果\"}"
+      exit 3
+    fi ;;
+  *)
+    echo "{\"error\":\"bad-backend\",\"hint\":\"QWEN_IMAGEGEN_BACKEND 只能是 tabbit 或 cdp\"}"; exit 1 ;;
+esac
+
+if [ "$BACKEND" = "cdp" ]; then
+  command -v node >/dev/null 2>&1 || { echo '{"error":"need-node","hint":"CDP 后端需要 Node.js"}'; exit 1; }
+  [ -d "$SKILL_DIR/node_modules/playwright-core" ] || { echo '{"error":"cdp-need-playwright-core","hint":"CDP 后端需要依赖：在技能目录执行 npm install playwright-core（一次即可）"}'; exit 1; }
+  cdp_port_open "$CDP_PORT" || { echo "{\"error\":\"cdp-port-closed\",\"hint\":\"端口 $CDP_PORT 没开：用 --remote-debugging-port=$CDP_PORT 启动浏览器（同一用户配置，登录态不丢）后重跑\"}"; exit 3; }
+fi
+
+# ---- 以下预检仅 Tabbit 后端需要（CDP 后端直接 attach，不管窗口/托盘）----
+if [ "$BACKEND" = "tabbit" ]; then
 
 # Tabbit 预检：浏览器没起来时只报错退出、一个页面都不开（根治"连开多页 + 弹窗"）
 PROBE_RC=0
@@ -115,6 +153,8 @@ if ! tabs_usable; then
   echo '{"tabbit-window-restored":"minimized"}'
 fi
 
+fi  # end: tabbit 后端专属预检
+
 if [ "${1:-}" = "--fetch" ]; then
   PROMPT=""; RATIO="$RATIO_DEFAULT"; OUT="${2:-}"
 else
@@ -153,12 +193,20 @@ write_cfg() {
 }
 write_cfg
 render() { sed "s#__CONFIG__#${CFG_JS}#g" "$1"; }
-cleanup() { rm -f "$CFG"; }
+cleanup() { rm -f "$CFG" "${FRAG_TMP:-}"; }
 # SIGTERM/INT 路径也要清掉临时 cfg（09-19 被 120s 前台超时杀掉时曾留下一堆 .qwen-imagegen-cfg-*.json）
 trap 'cleanup' EXIT INT TERM
+# 同一个片段，两种跑法：Tabbit 走它的 nodejs 子命令；CDP 走本地 runner（attach 用户已开着的浏览器）。
+# 片段契约完全一致（包进 async 函数体 + 注入 page），所以 generate.js / wait_download.js 原样复用。
 run_step() {
-  render "$1" | "$CLI" nodejs --task "$TASK" --request-id "$2" --timeout-ms "$3" 2>&1 \
-    | grep -v '^TABBIT_PLAYWRIGHT_INSTANCE'
+  if [ "$BACKEND" = "cdp" ]; then
+    FRAG_TMP="/tmp/qwen-imagegen-frag-$$-$(basename "$1")"
+    render "$1" > "$FRAG_TMP"
+    node "$SKILL_DIR/scripts/runner_cdp.js" "$(to_win "$FRAG_TMP")" "$CFG_JS" "$CDP_PORT" 2>&1
+  else
+    render "$1" | "$CLI" nodejs --task "$TASK" --request-id "$2" --timeout-ms "$3" 2>&1 \
+      | grep -v '^TABBIT_PLAYWRIGHT_INSTANCE'
+  fi
 }
 # 默认复用上次的标签组与对话；QWEN_IMAGEGEN_DISCARD=1 时用完即关
 find_group() {
@@ -182,6 +230,8 @@ except Exception:
   fi
 }
 finish_task() {
+  # CDP 后端 attach 的是用户自己的浏览器：绝不关闭它，标签页也留着（用户可能正在看）
+  [ "$BACKEND" = "cdp" ] && return 0
   if [ "${QWEN_IMAGEGEN_DISCARD:-0}" = "1" ]; then
     "$CLI" finish --task "$TASK" --discard >/dev/null 2>&1
   else
@@ -191,7 +241,8 @@ finish_task() {
 # 失败出口：结构化报错 + 释放标签 + 非零退出
 die() { echo "$1"; finish_task; cleanup; exit 1; }
 
-if [ "${QWEN_IMAGEGEN_DISCARD:-0}" != "1" ]; then
+# 标签组复用是 Tabbit 专有能力；CDP 后端直接复用用户浏览器里已打开的千问页
+if [ "$BACKEND" = "tabbit" ] && [ "${QWEN_IMAGEGEN_DISCARD:-0}" != "1" ]; then
   GROUP_ID="$(find_group)"
   if [ -n "${GROUP_ID:-}" ]; then
     "$CLI" resume --task "$TASK" --group "$GROUP_ID" >/dev/null 2>&1 \

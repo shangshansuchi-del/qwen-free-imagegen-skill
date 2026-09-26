@@ -26,7 +26,7 @@ for (let i = 0; i < 20; i++) {
 if (!profile) {
   return {
     error: "login-required",
-    hint: "在 Tabbit 浏览器里登录千问账号后重跑",
+    hint: "在浏览器里登录千问账号后重跑（Tabbit 或你自己的 Chrome/Edge 都行）",
     waitedMs: 20000,
   };
 }

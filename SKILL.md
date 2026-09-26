@@ -27,8 +27,22 @@ Windows 用 Git Bash 解释器（系统 `bash` 可能指向 WSL 并被拦截）�
 | 返回 | 怎么办 |
 | --- | --- |
 | `"recommended_backend":"tabbit"` | 直接正常生图，无需任何配置 |
-| `"cdp"` | 浏览器调试端口已开 → 走 CDP 后端（开发中） |
-| `"none"` | 两个后端都不可用 → 让用户装 Tabbit，或给 Chrome/Edge 加 `--remote-debugging-port=9222` 并**用原用户配置**重启一次（登录态不会丢）；配好再回来生图 |
+| `"recommended_backend":"cdp"` + `"playwright_core":1` | 浏览器调试端口已开，可直接用 CDP 后端 |
+| `"recommended_backend":"cdp"` + `"playwright_core":0` | 缺依赖：在技能目录跑一次 `npm install playwright-core` |
+| `"recommended_backend":"none"` | 两个后端都不可用 → 让用户装 Tabbit，或给 Chrome/Edge 加 `--remote-debugging-port=9222` 并**用原用户配置**重启一次（登录态不会丢） |
+
+## 后端：Tabbit / CDP（两条路，同一套页面逻辑）
+
+`QWEN_IMAGEGEN_BACKEND` 可强制 `tabbit` 或 `cdp`；不设则自动探测（Tabbit 优先，其次 CDP 端口）。
+
+- **Tabbit 后端**：走 `tabbit-cli`，自带标签组复用与托盘态预检。
+- **CDP 后端**：`scripts/runner_cdp.js` 用 Playwright `connectOverCDP` **attach 用户自己开着的浏览器**——
+  登录态来自用户浏览器本身，脚本既不登录也不关它（`finish_task` 在 CDP 下是 no-op）。
+  选页优先级：`cfg.convUrl`（本次对话）→ 千问页 → 最后一个可用页；`edge://`/`chrome://` 等内部页一律跳过。
+  依赖：`npm install playwright-core`（一次即可，`node_modules/` 已 gitignore）。
+  运行器会**摘掉 `http_proxy` 等环境变量**，否则本机 127.0.0.1 也会被代理劫持（实测 502）；
+  需要代理才能访问 CDN 的网络环境设 `QWEN_IMAGEGEN_CDP_KEEP_PROXY=1`。
+- 端口默认 9222，可用 `QWEN_IMAGEGEN_CDP_PORT` 改。
 
 **Tabbit 浏览器没打开时**：脚本开头做预检，浏览器没起来报 `{"error":"tabbit-not-running"}` 并 exit 3，一个页面都不开。只有 `tabbit-cli-not-found` 才是浏览器没安装。
 

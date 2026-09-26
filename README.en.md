@@ -97,7 +97,7 @@ Those are still rare: macOS has ego lite ([lite.ego.app](https://lite.ego.app), 
 | Backend | Status | Notes |
 | --- | --- | --- |
 | **Tabbit** | ✅ Supported | This skill has only been tested on Windows so far |
-| Your own Chrome / Edge (CDP connection) | 🚧 Planned | Reuses your existing login state — **but you must open a debugging port on your browser first**; see the end of this page |
+| Your own Chrome / Edge (CDP connection) | ✅ Supported | Reuses your existing login state, no extra browser to install — **but you must open a debugging port and install one dependency**, two steps at the end of this page |
 
 ---
 
@@ -179,11 +179,9 @@ Normally your agent handles it; use this only when debugging:
 /usr/bin/bash.exe "<skill-dir>/scripts/qwen_image.sh" --fetch "<output-path>"
 ```
 
-## Before using your own browser (CDP): one setup step
+## Using your own browser (CDP): two one-time steps
 
-> This backend is still in development (🚧). Documenting the setup now so you can prepare in advance.
-
-CDP doesn't switch itself on — **you have to open a "debugging door" on Chrome / Edge** before Playwright can take it over:
+**Step 1 · Open the "debugging door"** — CDP doesn't switch itself on; Chrome / Edge has to be relaunched with the flag before Playwright can take it over:
 
 1. **Fully quit** Chrome / Edge (also from the tray — otherwise the startup flag is ignored)
 2. Relaunch it with the flag:
@@ -196,6 +194,14 @@ CDP doesn't switch itself on — **you have to open a "debugging door" on Chrome
 4. Then sign in to [chat.qwen.ai](https://chat.qwen.ai) as usual — **the login state stays in your own browser**; the script just borrows it
 
 Don't want to type it? **Let your agent do it**: on first use it runs a checkup (`--doctor`, next section), and if neither backend is available it asks: "shall I restart your browser with the debugging port enabled?" Say yes, and it relaunches the browser with the flag — **using your existing profile, so your login state survives**. Once is enough; don't wait for an error round-trip.
+
+**Step 2 · Install one dependency** (CDP path only — Tabbit users can skip this):
+
+```text
+npm install playwright-core
+```
+
+Run it once inside the skill folder (~14 MB, library only, **no browsers included**). After that `--doctor` shows `"playwright_core":1` and you're ready.
 
 ⚠️ Two warnings:
 
@@ -243,6 +249,9 @@ The JS layer (`generate.js` + `wait_download.js`, 148 lines total) is **pure Pla
 | `tabbit-not-running` / `tabbit-no-window` | Browser not started / window in tray and auto-restore failed (no page opened, no quota used) |
 | `model-not-found` / `version-dropdown-missing` | Page changed — see `references/ui-selectors.md` |
 | `output-dir-unwritable` | Output dir can't be created — pass a third argument to change it |
+| `cdp-port-closed` | Browser isn't exposing a debugging port (or the port is wrong; default 9222) |
+| `cdp-need-playwright-core` | CDP dependency missing — run `npm install playwright-core` in the skill folder once |
+| `no-backend` | Neither Tabbit nor CDP is available → run `--doctor` first to see what to do |
 
 Full contract in `SKILL.md`.
 
@@ -252,6 +261,8 @@ Full contract in `SKILL.md`.
 | --- | --- |
 | `QWEN_IMAGEGEN_OUT_DIR` | Override the default output directory (precedence above) |
 | `QWEN_IMAGEGEN_BACKEND` | Force a backend: `tabbit` or `cdp` (default: auto-detect Tabbit → CDP) |
+| `QWEN_IMAGEGEN_CDP_PORT` | CDP debugging port (default 9222) |
+| `QWEN_IMAGEGEN_CDP_KEEP_PROXY=1` | Keep system proxy settings for the CDP backend (by default they're stripped, otherwise 127.0.0.1 gets hijacked by the proxy too) |
 | `QWEN_IMAGEGEN_DISCARD=1` | Close the tab group after each run (default: reuse the session) |
 | `QWEN_IMAGEGEN_NO_RETRY=1` | Disable the automatic `provider-error` resubmit |
 
@@ -261,7 +272,8 @@ Full contract in `SKILL.md`.
 qwen-imagegen/
 ├── SKILL.md                      # Skill entry + full error-code contract
 ├── scripts/
-│   ├── qwen_image.sh             # Main flow: browser dispatch, retries, JSON output
+│   ├── qwen_image.sh             # Main flow: backend dispatch, retries, JSON output
+│   ├── runner_cdp.js             # CDP backend runner: attaches to your own browser
 │   ├── generate.js               # Page actions: pick mode / model / type prompt / submit
 │   └── wait_download.js          # Wait for completion + fetch full-size original
 └── references/

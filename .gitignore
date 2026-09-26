@@ -1,6 +1,10 @@
 # 生成的图片（本地产物，不入库）
 outputs/
 
+# CDP 后端依赖（用户自行 npm install playwright-core）
+node_modules/
+package-lock.json
+
 # Python 编译缓存
 __pycache__/
 *.pyc

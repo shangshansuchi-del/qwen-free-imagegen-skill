@@ -14,8 +14,9 @@ jobs:
       - name: bash 语法检查
         run: bash -n scripts/qwen_image.sh
 
-      - name: JS 片段语法检查（它们是 async 函数体，需包一层再验）
+      - name: JS 语法检查（片段是 async 函数体，需包一层再验；runner 是普通模块）
         run: |
+          node --check scripts/runner_cdp.js
           for f in scripts/generate.js scripts/wait_download.js; do
             { echo "(async () => {"; cat "$f"; echo "})();"; } > /tmp/fragment.mjs
             node --check /tmp/fragment.mjs
